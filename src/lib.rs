@@ -1,8 +1,7 @@
 use std::collections::HashMap;
 
 
-pub fn main(objects : HashMap<(usize, usize), parser::Object>) {
-    use parser::Value::*;
+pub fn main(objects : HashMap<String, parser::Value>) {
     use std::rc::Rc;
     use slint::Model;
 
@@ -19,8 +18,8 @@ pub fn main(objects : HashMap<(usize, usize), parser::Object>) {
 
     for (idx, o) in objects {
         let id = acc.len() as i32;
-        acc.push(view(id, 0., format!("object{idx:?}:")));
-        parse_value_helper(10., id, Dict(o.dict), &mut acc, &mut make_track);
+        acc.push(view(id, 0., format!("{idx:?}:")));
+        parse_value_helper(10., id, o, &mut acc, &mut make_track);
     }
     
     let tree_view = View::new().unwrap();
