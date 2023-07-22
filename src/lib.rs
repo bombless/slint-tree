@@ -32,12 +32,29 @@ pub fn main(objects : HashMap<(usize, usize), parser::Object>) {
         let mut row = list.row_data(id as _).unwrap();
         let open =  row.open;
         row.open = !open;
-        println!("{id} {}", if open { "closed" } else { "opened" });
+        list.set_row_data(id as _, row);
+
+        let mut children = Vec::new();
+        all_children(&track, id as _, &mut children);
+        for child in children {
+            let mut row = list.row_data(child as _).unwrap();
+            row.hide = open;
+            list.set_row_data(child as _, row);
+        }
     });
 
     tree_view.set_items(items.into());
     
     tree_view.run().unwrap();
+}
+
+fn all_children(source: &HashMap<i32, Vec<i32>>, id: i32, acc: &mut Vec<i32>) {
+    if let Some(children) = source.get(&id) {
+        for child in children {
+            acc.push(*child);
+            all_children(source, *child, acc);
+        }
+    }
 }
 
 fn view(id: i32, indent: f32, text: String) -> ViewData {
@@ -61,9 +78,12 @@ fn parse_value_helper(indent: f32, parent: i32, value: parser::Value, acc: &mut 
         Ref(x, y) => acc.push(view(id, indent, format!("Ref({x}, {y})"))),
         Dict(m) => {
             acc.push(view(id, indent, format!("dict")));
+            let parent = id;
             for (k, v) in m {
-                acc.push(view(id, indent + 10., format!("{k}:")));
-                parse_value_helper(indent + 10., id, v, acc, track);
+                let key_id = acc.len() as _;
+                track(key_id, parent);
+                acc.push(view(key_id, indent + 10., format!("{k}:")));
+                parse_value_helper(indent + 20., key_id, v, acc, track);
             }
         }
     }
@@ -78,20 +98,19 @@ slint::slint! {
         open: bool,
         hide: bool,
     }
-
     
     export component View inherits Window {
-        callback toggle(int);
         width: 800px;
         height: 800px;
+        callback toggle(int);
         in property <[ViewData]> items;
         ScrollView {
             VerticalBox {
                 for item in root.items: HorizontalLayout {
-                    Rectangle {
+                    if !item.hide: Rectangle {
                         width: item.indent;
                     }
-                    Text {
+                    if !item.hide: Text {
                         text: item.open ? "↓" : "→";
                         horizontal-alignment: right;
                         vertical-alignment: center;
@@ -100,10 +119,11 @@ slint::slint! {
                             clicked => { toggle(item.id) }
                         }
                     }
-                    Text {
+                    if !item.hide: Text {
                         horizontal-alignment: left;
                         text: item.text;
                     }
+                    
                 }
             }
         }
