@@ -3,11 +3,13 @@ use std::collections::HashMap;
 
 
 pub fn main(objects : HashMap<(usize, usize), parser::Object>) {
+    use parser::Value::*;
 
     let mut acc = vec![];
 
-    for (_, o) in objects {
-        parse_value_helper(0., parser::Value::Dict(o.dict), &mut acc);
+    for (idx, o) in objects {
+        acc.push(ViewData {indent: 0., text: format!("object{idx:?}:").into() });
+        parse_value_helper(10., Dict(o.dict), &mut acc);
     }
     
     let tree_view = View::new().unwrap();
