@@ -38,18 +38,27 @@ fn parse_value_helper(indent: f32, value: parser::Value, acc: &mut Vec<ViewData>
 }
 
 slint::slint! {
-    import { VerticalBox } from "std-widgets.slint";
+    import { ScrollView, VerticalBox } from "std-widgets.slint";
     export struct ViewData {
         text: string,
         indent: length,
     }
     
     export component View inherits Window {
+        width: 800px;
+        height: 800px;
         in property <[ViewData]> items;
-        VerticalBox {
-            for item in root.items: Text {
-                x: item.indent;
-                text: item.text;
+        ScrollView {
+            VerticalBox {
+                for item in root.items: HorizontalLayout {
+                    Rectangle {
+                        width: item.indent;
+                    }
+                    Text {
+                        horizontal-alignment: left;
+                        text: item.text;
+                    }
+                }
             }
         }
     }
