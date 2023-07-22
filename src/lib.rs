@@ -1,7 +1,8 @@
 use std::collections::HashMap;
+use parser::{Object, Value::Dict};
 
 
-pub fn main(objects : HashMap<String, parser::Value>) {
+pub fn main(fonts : HashMap<&str, &Object>) {
     use std::rc::Rc;
     use slint::Model;
 
@@ -16,10 +17,10 @@ pub fn main(objects : HashMap<String, parser::Value>) {
         list.push(id);
     };
 
-    for (idx, o) in objects {
+    for (idx, o) in fonts {
         let id = acc.len() as i32;
         acc.push(view(id, 0., format!("{idx:?}:")));
-        parse_value_helper(10., id, o, &mut acc, &mut make_track);
+        parse_value_helper(10., id, Dict(o.dict().clone()), &mut acc, &mut make_track);
     }
     
     let tree_view = View::new().unwrap();

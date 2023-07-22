@@ -1,4 +1,4 @@
 fn main() {
-    let tree = parser::parser::parse(include_bytes!("../test.pdf")).unwrap();
-    slint_tree::main(tree);
+    let pdf = parser::parser::parse(include_bytes!("../test.pdf")).unwrap();
+    slint_tree::main(pdf.get_fonts());
 }
