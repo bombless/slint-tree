@@ -14,21 +14,26 @@ pub fn main(pdf : PDF) {
 
     let (track, tab) = make_tab(pdf.get_meta());
 
+    let height = tab.row_count() as f32 * 16.;
+
     track_list.push(track);
 
     let tab_data = TabData {
         title: "Meta".into(),
         data: tab,
+        height,
     };
 
     vec.push(tab_data);
     
     for (_, o) in pdf.get_objects() {
         let (track, tab) = make_tab(o.dict());
+        let height = tab.row_count() as f32 * 16.;
         track_list.push(track);
         vec.push(TabData {
             title: format!("{:?}", o.id()).into(),
             data: tab,
+            height,
         })
     }
 
@@ -38,7 +43,7 @@ pub fn main(pdf : PDF) {
     let model_clone = model_rc.clone();
 
     tree_view.on_toggle(move |n, id| {
-        let tab = model_clone.row_data(n as _).unwrap();
+        let mut tab = model_clone.row_data(n as _).unwrap();
         let mut row = tab.data.row_data(id as _).unwrap();
         let open =  row.open;
         row.open = !open;
@@ -62,6 +67,8 @@ pub fn main(pdf : PDF) {
             }
             tab.data.set_row_data(i, row);
         }
+        tab.height = height + 16.;
+        model_clone.set_row_data(n as _, tab);
     });
 
     tree_view.set_tabs(model_rc);
@@ -147,6 +154,7 @@ slint::slint! {
     export struct TabData {
         title: string,
         data: [ViewData],
+        height: length,
     }
     
     export component View inherits Window {
@@ -156,6 +164,7 @@ slint::slint! {
         property <int> current-tab: 0;
         callback toggle(int, int);
         ScrollView {
+            viewport-height: tabs[current-tab].height;
             HorizontalLayout {
                 x: 0;
                 y: 0;
@@ -192,7 +201,7 @@ slint::slint! {
                     }
                 }
                 if !item.hide: Text {
-                    x: item.x + 16px;
+                    x: item.x + 30px;
                     text: item.text;
                 }
 
